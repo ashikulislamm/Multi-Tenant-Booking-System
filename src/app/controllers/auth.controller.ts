@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 export class AuthController {
   /**
-   * Endpoint to set up a new Organization and its ORG_ADMIN user.
+   * Set up a new Organization and its ORG_ADMIN user.
    */
   static async setup(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -17,7 +17,7 @@ export class AuthController {
     }
   }
   /**
-   * Endpoint for ORG_ADMIN to register an EMPLOYEE within their organization.
+   * ORG_ADMIN to register an EMPLOYEE within their organization.
    */
   static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -33,7 +33,7 @@ export class AuthController {
     }
   }
   /**
-   * Endpoint for user login.
+   * User login.
    */
   static async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -48,7 +48,7 @@ export class AuthController {
     }
   }
   /**
-   * Endpoint to fetch current authenticated user profile.
+   * Fetch current authenticated user profile.
    */
   static async me(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {

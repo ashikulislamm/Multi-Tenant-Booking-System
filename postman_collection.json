@@ -1,0 +1,495 @@
+{
+	"info": {
+		"_postman_id": "8b51d02c-47b2-4d0c-88e2-2e860dc6fa33",
+		"name": "Multi-Tenant Resource Booking System",
+		"description": "API collection for testing user registration, multi-tenant resource management, timezone-aware availability engine, and bookings.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth & Tenant Bootstrap",
+			"item": [
+				{
+					"name": "1. Setup Tenant (Acme Corp)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.status === 'success') {",
+									"    pm.collectionVariables.set('adminToken', response.data.token);",
+									"    pm.collectionVariables.set('organizationId', response.data.organization.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orgName\": \"Acme Corp\",\n  \"timezone\": \"America/New_York\",\n  \"adminName\": \"Alice Admin\",\n  \"email\": \"alice@acme.com\",\n  \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/setup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"setup"
+							]
+						},
+						"description": "Bootstraps a new organization (Tenant) and registers its initial ORG_ADMIN user. Automatically extracts and stores the `adminToken` and `organizationId` variables."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Register Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Eric Employee\",\n  \"email\": \"eric@acme.com\",\n  \"password\": \"password123\",\n  \"organizationId\": \"{{organizationId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Allows the ORG_ADMIN of Tenant 1 to register a new employee. Isolation logic requires the organizationId to match the admin's organization."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Login Employee",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.status === 'success') {",
+									"    pm.collectionVariables.set('employeeToken', response.data.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"eric@acme.com\",\n  \"password\": \"password123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticates the newly created employee and saves their token to `employeeToken` collection variable."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Get Profile (Me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employeeToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "Verifies authentication is working by fetching profile info using the employee token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Organization Settings",
+			"item": [
+				{
+					"name": "Get Organization Policy",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/organizations/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"organizations",
+								"me"
+							]
+						},
+						"description": "Fetches the organization's settings including active working hours calendar and timezone."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Organization settings",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Acme Corp HQ\",\n  \"bookingPolicy\": {\n    \"maxFutureDays\": 45\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/organizations/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"organizations",
+								"me"
+							]
+						},
+						"description": "Allows the Org Admin to modify timezone, organization name, or future booking window thresholds."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Resource Management",
+			"item": [
+				{
+					"name": "1. Create Resource (Meeting Room)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.status === 'success') {",
+									"    pm.collectionVariables.set('resourceId', response.data.resource._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{adminToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Boardroom Alpha\",\n  \"type\": \"MEETING_ROOM\",\n  \"bufferTimeMinutes\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/resources",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resources"
+							]
+						},
+						"description": "ORG_ADMIN creates a resource with 15 minutes of buffer time. Saves output ID to `resourceId` collection variable."
+					},
+					"response": []
+				},
+				{
+					"name": "2. List Tenant Resources",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employeeToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/resources",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resources"
+							]
+						},
+						"description": "Lists all resources that belong to the tenant's organization."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Availability & Bookings",
+			"item": [
+				{
+					"name": "1. Get Resource Availability Slots",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employeeToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/resources/{{resourceId}}/availability",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"resources",
+								"{{resourceId}}",
+								"availability"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-06-18",
+									"description": "Interpret date in local timezone of Organization"
+								},
+								{
+									"key": "durationMinutes",
+									"value": "60",
+									"description": "Duration of slot to search for"
+								},
+								{
+									"key": "slotStepMinutes",
+									"value": "15",
+									"description": "Step interval increments"
+								}
+							]
+						},
+						"description": "Queries the dynamic availability slot engine for a specific future weekday."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Create Booking",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.status === 'success') {",
+									"    pm.collectionVariables.set('bookingId', response.data.booking._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employeeToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"resourceId\": \"{{resourceId}}\",\n  \"startTime\": \"2026-06-18T14:00:00.000Z\",\n  \"endTime\": \"2026-06-18T15:00:00.000Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings"
+							]
+						},
+						"description": "Creates a reservation on the resource in UTC time. Triggers working hours, booking window, and buffer overlap verification. Saves output ID to `bookingId` variable."
+					},
+					"response": []
+				},
+				{
+					"name": "3. List Bookings",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employeeToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings"
+							]
+						},
+						"description": "Lists all booked slots registered under the organization."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Cancel Booking",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employeeToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bookings/{{bookingId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bookings",
+								"{{bookingId}}"
+							]
+						},
+						"description": "Cancels a booked slot. Soft deletes booking by marking its status as CANCELLED."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "employeeToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "organizationId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "resourceId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "bookingId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

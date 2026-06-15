@@ -3,7 +3,7 @@ import { BookingService } from '../services/booking.service';
 import { AvailabilityService } from '../services/availability.service';
 export class BookingController {
   /**
-   * Endpoint to create a resource booking.
+   * Create a resource booking.
    */
   static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -28,7 +28,7 @@ export class BookingController {
     }
   }
   /**
-   * Endpoint to list bookings with optional query filters.
+   * List bookings with optional query filters.
    */
   static async list(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -49,7 +49,7 @@ export class BookingController {
     }
   }
   /**
-   * Endpoint to retrieve details of a specific booking.
+   * Retrieve details of a specific booking.
    */
   static async get(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -64,7 +64,7 @@ export class BookingController {
     }
   }
   /**
-   * Endpoint to cancel a resource booking.
+   * Cancel a resource booking.
    */
   static async cancel(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -82,7 +82,7 @@ export class BookingController {
     }
   }
   /**
-   * Endpoint to calculate dynamic availability slots for a resource.
+   * Calculate dynamic availability slots for a resource.
    */
   static async getAvailability(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
